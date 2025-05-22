@@ -1,0 +1,7 @@
+{
+  "threshold_high": 15000,
+  "threshold_low": 12000,
+  "monitoring": false,
+  "alert_high_sent": false,
+  "alert_low_sent": false
+}
