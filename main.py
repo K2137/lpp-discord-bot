@@ -61,9 +61,20 @@ async def on_ready():
 async def monitor_price(bot):
     await bot.wait_until_ready()
     channel = bot.get_channel(CHANNEL_ID)
+    start_price = None
+    last_summary_date = None
+    
     while not bot.is_closed():
+
+        now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=2)))
+        
         if config["monitoring"] and is_trading_time():
             price = await fetch_lpp_price()
+
+            if start_price is None and now.time() >= datetime.time(8, 30):
+                    start_price = price
+                    print(f"[INFO] Zapisano cenę początkową: {start_price} zł")
+            
             if price is not None:
                 if price > config["threshold_high"] and not config["alert_high_sent"]:
                     await channel.send(f"🚀 Cena LPP przekroczyła próg górny: {price} zł")
@@ -75,6 +86,20 @@ async def monitor_price(bot):
                     config["alert_low_sent"] = True
                     config["alert_high_sent"] = False
                     save_config()
+                    
+            if now.time().hour == 17 and now.time().minute == 30:
+                today = now.date()
+                if last_summary_date != today and start_price is not None and price is not None:
+                    difference = round(price - start_price, 2)
+                    await channel.send(
+                        f"Podsumowanie dnia {today}:\n"
+                        f"Cena początkowa: {start_price} zł\n"
+                        f"Cena końcowa: {price} zł\n"
+                        f"Zmiana: {difference:+} zł"
+                    )
+                    last_summary_date = today
+                    start_price = None 
+                    
         await asyncio.sleep(60)
 
 @bot.event
