@@ -155,5 +155,10 @@ async def on_message(message):
             f"Próg górny: {config['threshold_high']} zł\n"
             f"Próg dolny: {config['threshold_low']} zł"
         )
-
+    elif content.startswith("!price"):
+        price = await fetch_lpp_price()
+        if price is not None:
+            await message.channel.send(f"Aktualna cena LPP: {price} zł")
+        else:
+            await message.channel.send("❌ Nie udało się pobrać aktualnej ceny.")
 bot.run(TOKEN)
